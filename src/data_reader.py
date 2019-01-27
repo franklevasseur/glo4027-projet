@@ -1,19 +1,30 @@
 import csv
 
+from Data import Data
 
-def read_file(file_path):
+
+def read_file(file_path, format_row_func):
     with open(file_path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        keys = []
         rows = []
-        for i, row in enumerate(csv_reader):
-            if i == 0:
-                keys.extend(row)
-            else:
-                rows.append(row)
 
-    return keys, rows
+        keys = next(csv_reader)
+        for row in csv_reader:
+            rows.append(format_row_func(row))
+
+    return rows, keys
 
 
-def read_data(file_path):
-    pass
+def read_day_data(file_path):
+    format_row = lambda r: Data(True, r)
+    data, _ = read_file(file_path, format_row)
+    return data
+
+
+def read_hour_data(file_path):
+    format_row = lambda r: Data(False, r)
+    data, _ = read_file(file_path, format_row)
+    return data
+
+
+
