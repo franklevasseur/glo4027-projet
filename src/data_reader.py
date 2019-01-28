@@ -15,13 +15,13 @@ def read_file(file_path, format_row_func):
     return rows, keys
 
 
-def read_day_data(file_path):
+def read_train_data(file_path):
     format_row = lambda r: Data(True, r)
     data, _ = read_file(file_path, format_row)
     return data
 
 
-def read_hour_data(file_path):
+def read_test_data(file_path):
     format_row = lambda r: Data(False, r)
     data, _ = read_file(file_path, format_row)
     return data

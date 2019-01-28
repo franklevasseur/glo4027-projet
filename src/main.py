@@ -2,28 +2,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.feature_selection import RFE
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVR
 
 import data_reader
 
-DAY_FILE_PATH = 'Bike-Sharing-Dataset/day.csv'
-HOUR_FILE_PATH = 'Bike-Sharing-Dataset/hour.csv'
+TRAIN_FILE_PATH = 'bike-sharing-demand/train.csv'
+TEST_FILE_PATH = 'bike-sharing-demand/test.csv'
 
 if __name__ == "__main__":
 
-    daily_data = data_reader.read_day_data(DAY_FILE_PATH)
-    # hourly_data = data_reader.read_day_data(HOUR_FILE_PATH)
+    train_data = data_reader.read_train_data(TRAIN_FILE_PATH)
 
-    Y = np.array([d.casual_cnt for d in daily_data])
-    X = np.array([(d.year,
-                 d.month,
+    Y = np.array([d.total_cnt for d in train_data])
+    X = np.array([(d.date.year,
+                 d.date.month,
                  d.holiday,
-                 d.weekday,
+                 d.working_day,
                  d.weather,
                  d.temperature,
-                 d.humidity, d.wind_speed) for d in daily_data])
+                 d.humidity, d.wind_speed) for d in train_data])
 
-    model = LinearSVC()
+    model = LinearSVR()
     model.fit(X, Y)
 
     N = 3
@@ -32,9 +31,9 @@ if __name__ == "__main__":
 
     kept_features = [i for (i, r) in enumerate(selector.ranking_) if r == 1]
 
-    print("les features les plus significatifs selon la sélection arrière séquentielle sont {}".format(kept_features))
+    print("les features les plus significatives selon la sélection arrière séquentielle sont {}".format(kept_features))
 
-    x_temp = np.array([d.temperature for d in daily_data])
+    x_temp = np.array([d.temperature for d in train_data])
 
     plt.scatter(x_temp, Y)
     plt.show()
