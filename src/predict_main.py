@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 from matplotlib import pyplot
+import math
 
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVR
@@ -15,6 +16,16 @@ def format_data_for_prediction(d: Data):
     return (d.temperature,
             d.working_day,
             d.humidity)
+
+
+def get_kaggle_score(actual, prediction):
+    n = actual.size
+    score = np.log(prediction + 1) - np.log(actual + 1)
+    score = np.square(score)
+    score = (1 / n) * score.sum()
+    score = np.sqrt(score)
+
+    return score
 
 
 if __name__ == "__main__":
@@ -55,8 +66,11 @@ if __name__ == "__main__":
     model.fit(X_train, y_train)
 
     y_hat = model.predict(X_test)
+
     squared_deviations_sum = (np.square(y_hat - y_test)).sum()
     print("La somme des résidus carrés est : {0:,.2f}".format(squared_deviations_sum))
+
+    print("Le score Kaggle est : {0:.3f}".format(get_kaggle_score(y_test, y_hat)))
 
     test_dates = [d.date for i, d in enumerate(whole_data) if i in test_indexes]
 
