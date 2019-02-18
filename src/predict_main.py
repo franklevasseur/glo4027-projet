@@ -10,6 +10,8 @@ import data_repository
 from data import Data
 from constants import *
 
+VISUALIZE = 0
+
 
 def format_data_for_casual_prediction(d: Data):
     return (d.date.hour,
@@ -55,14 +57,6 @@ if __name__ == "__main__":
     casual_cnts = np.array([d.casual_cnt for d in train_data])
     registered_cnts = np.array([d.registered_cnt for d in train_data])
 
-    # ----------------- Visualisation -----------------
-    pyplot.figure()
-    pyplot.title("locations par date")
-    pyplot.scatter(dates, registered_cnts, c='g', s=5, label="registered counts")
-    pyplot.scatter(dates, casual_cnts, c='r', s=5, label="casual counts")
-    pyplot.legend()
-    pyplot.show()
-
     # ----------------- Cleaning -----------------
     pass
 
@@ -100,12 +94,13 @@ if __name__ == "__main__":
 
     test_dates = [d.date for i, d in enumerate(train_data) if i in test_indexes]
 
-    pyplot.figure()
-    pyplot.title("Prédiction du compte total de location")
-    pyplot.scatter(test_dates, Y_test, c='g', s=5, label="actual")
-    pyplot.scatter(test_dates, Y_hat, c='r', s=5, label="predictions")
-    pyplot.legend()
-    pyplot.show()
+    if VISUALIZE:
+        pyplot.figure()
+        pyplot.title("Prédiction du compte total de location")
+        pyplot.scatter(test_dates, Y_test, c='g', s=5, label="actual")
+        pyplot.scatter(test_dates, Y_hat, c='r', s=5, label="predictions")
+        pyplot.legend()
+        pyplot.show()
 
     # ----------------- validation -----------------
     model1.fit(Xcasual, Ycasual)  # on a gaspillé le 1/3 du dataset tentot alors ici on le reprend au complet

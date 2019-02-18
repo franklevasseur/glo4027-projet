@@ -19,7 +19,17 @@ def plot_counts_vs_attribute(attr, title, xtick=None):
 
     pyplot.legend()
 
-    pyplot.savefig("./figs/{}.pdf".format(title))
+    pyplot.savefig("./figs/{}.png".format(title))
+    pyplot.close()
+
+
+def plot_distribution(attr, title, xtitle):
+    pyplot.figure()
+
+    pyplot.xlabel(xtitle)
+    pyplot.hist(attr, bins='auto')
+
+    pyplot.savefig("./figs/hist_{}.png".format(title))
     pyplot.close()
 
 
@@ -43,8 +53,27 @@ if __name__ == "__main__":
 
     casual_cnts = np.array([d.casual_cnt for d in whole_data])
     registered_cnts = np.array([d.registered_cnt for d in whole_data])
+    total_counts = np.array([d.total_cnt for d in whole_data])
 
-    # ----------------- visualize -----------------
+    # ----------------- counts vs dates ----------------------
+    pyplot.figure()
+    pyplot.xlabel("Date")
+    pyplot.ylabel("Nombre de locations")
+    pyplot.scatter(dates, total_counts, c='b', s=5)
+    pyplot.savefig("./figs/totalcountVsdate.png")
+    pyplot.close()
+
+    pyplot.figure()
+    pyplot.xlabel("Date")
+    pyplot.ylabel("Nombre de locations")
+    pyplot.scatter(dates, registered_cnts, c='g', s=5, label="usagers inscrits")
+    pyplot.scatter(dates, casual_cnts, c='r', s=5, label="usagers occasionnels")
+
+    pyplot.legend()
+    pyplot.savefig("./figs/countsVsdate.png")
+    pyplot.close()
+
+    # ----------------- attributes vs counts -----------------
     plot_counts_vs_attribute(months, "months", range(1, 13))
     plot_counts_vs_attribute(days, "days", range(0, 7))
     plot_counts_vs_attribute(hours, "hours", range(0, 24))
@@ -55,3 +84,10 @@ if __name__ == "__main__":
     plot_counts_vs_attribute(temperatures, "temperatures")
     plot_counts_vs_attribute(felt_temps, "felt_temps")
     plot_counts_vs_attribute(wind_speeds, "wind_speeds")
+
+    # ----------------- distributions -----------------
+    plot_distribution(registered_cnts, "registered", "Nombre de locations d'usagers inscrits")
+    plot_distribution(casual_cnts, "registered", "Nombre de locations d'usagers inscrits")
+    plot_distribution(temperatures, "temperatures", "temperatures")
+    plot_distribution(felt_temps, "felt_temps", "temperatures ressenties")
+    plot_distribution(wind_speeds, "wind_speeds", "vents")
