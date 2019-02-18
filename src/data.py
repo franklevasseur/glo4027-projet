@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from src.constants import *
+from constants import *
 
 
 class Data:

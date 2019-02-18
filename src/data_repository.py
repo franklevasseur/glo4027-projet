@@ -1,6 +1,6 @@
 import csv
 
-from src.data import Data
+from data import Data
 
 
 def read_file(file_path, format_row_func):
