@@ -1,7 +1,7 @@
-TRAIN_FILE_PATH = 'bike-sharing-demand/train.csv'
-TEST_FILE_PATH = 'bike-sharing-demand/test.csv'
-SUBMISSION_TEMPLATE_FILE_PATH = 'bike-sharing-demand/sampleSubmission.csv'
-CURRENT_SUBMISSION = 'bike-sharing-demand/francoislevasseur_submission.csv'
+TRAIN_FILE_PATH = '../bike-sharing-demand/train.csv'
+TEST_FILE_PATH = '../bike-sharing-demand/test.csv'
+SUBMISSION_TEMPLATE_FILE_PATH = '../bike-sharing-demand/sampleSubmission.csv'
+CURRENT_SUBMISSION = '../bike-sharing-demand/francoislevasseur_submission.csv'
 
 # csv file indexes
 DATE = 0

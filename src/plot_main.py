@@ -2,9 +2,9 @@ import numpy as np
 from typing import List
 from matplotlib import pyplot
 
-import data_repository
-from data import Data
-from constants import *
+import src.data_repository
+from src.data import Data
+from src.constants import *
 
 
 def plot_counts_vs_attribute(attr, title, xtick=None):
@@ -26,7 +26,7 @@ def plot_counts_vs_attribute(attr, title, xtick=None):
 if __name__ == "__main__":
 
     # ----------------- read all data -----------------
-    whole_data: List[Data] = data_repository.read_train_data(TRAIN_FILE_PATH)
+    whole_data: List[Data] = src.data_repository.read_train_data(TRAIN_FILE_PATH)
 
     dates = np.array([d.date for d in whole_data])
 

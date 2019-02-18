@@ -6,9 +6,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVR
 from sklearn.ensemble import RandomForestRegressor
 
-import data_repository
-from data import Data
-from constants import *
+import src.data_repository
+from src.data import Data
+from src.constants import *
 
 
 def format_data_for_casual_prediction(d: Data):
@@ -37,7 +37,7 @@ def get_kaggle_score(actual, prediction):
 if __name__ == "__main__":
 
     # ----------------- read all data -----------------
-    whole_data: List[Data] = data_repository.read_train_data(TRAIN_FILE_PATH)
+    whole_data: List[Data] = src.data_repository.read_train_data(TRAIN_FILE_PATH)
 
     dates = np.array([d.date for d in whole_data])
 
