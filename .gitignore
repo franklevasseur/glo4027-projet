@@ -2,3 +2,5 @@
 __*
 figs/
 !.gitignore
+*.iml
+.idea/
