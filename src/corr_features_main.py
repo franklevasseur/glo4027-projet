@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     casual = np.array([d.casual_cnt for d in whole_data])
     registered = np.array([d.registered_cnt for d in whole_data])
+    total = np.array([d.total_cnt for d in whole_data])
 
     dates = np.array([d.date for d in whole_data])
 
@@ -34,6 +35,15 @@ if __name__ == "__main__":
     humidities = np.array([d.humidity for d in whole_data])
     weathers = np.array([d.weather for d in whole_data])
     wind_speed = np.array([d.wind_speed for d in whole_data])
+
+    # ----------------- evaluate counts correlation -----------------
+    casual_registered_coeff = np.corrcoef(casual, registered)[1, 0]
+    casual_total_coeff = np.corrcoef(casual, total)[1, 0]
+    registered_total_coeff = np.corrcoef(registered, total)[1, 0]
+
+    print("\nLe coefficient de correlation entre casual et registered est : {0:.3f}".format(casual_registered_coeff))
+    print("Le coefficient de correlation entre casual et total est : {0:.3f}".format(casual_total_coeff))
+    print("Le coefficient de correlation entre registered et total est : {0:.3f} \n".format(registered_total_coeff))
 
     # ----------------- evaluate intra features correlation -----------------
 
