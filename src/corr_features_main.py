@@ -50,6 +50,7 @@ if __name__ == "__main__":
         f1_vect = transposed_X[f1]
         f2_vect = transposed_X[f2]
         corr_coeff = np.corrcoef(f1_vect, f2_vect)[1, 0]
+        corr_coeff = np.round(corr_coeff, 3)
 
         intra_features_corr[f1, f2] = corr_coeff
         intra_features_corr[f2, f1] = corr_coeff  # matrice symétrique
@@ -63,7 +64,7 @@ if __name__ == "__main__":
                 "humidity",
                 "wind_speed")
     print("\nLa matrice des coefficients de correlation entre chaque paire de feature est : ")
-    print(tabulate(intra_features_corr, headers))
+    print(tabulate(intra_features_corr, headers, tablefmt='latex'))
 
     limit = 0.1
     print("\nLes paires de features ou on détecte une correlation intéressante (> à {}) sont: ".format(limit))
@@ -74,10 +75,10 @@ if __name__ == "__main__":
     for feat, head in zip(X.T, headers):
         casual_corr = np.corrcoef(feat, casual)[1, 0]
         registered_corr = np.corrcoef(feat, registered)[1, 0]
-        count_correlations.append([head, casual_corr, registered_corr])
+        count_correlations.append([head, np.round(casual_corr, 3), np.round(registered_corr, 3)])
 
     print("\nLes coefficients de corrélation entre chaque feature et le nombre de location casual et registered : ")
-    print(tabulate(count_correlations, ("casual", "registered")))
+    print(tabulate(count_correlations, ("casual", "registered"), tablefmt='latex'))
 
     # ----------------- visualize -----------------
     fig, ax1 = pyplot.subplots()

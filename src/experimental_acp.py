@@ -37,6 +37,7 @@ if __name__ == "__main__":
     print('NaN?', bikeDt.isnull().values.any())
 
     bikeDatetime = pd.to_datetime(bikeDt.datetime, format='%Y-%m-%d %H:%M:%S')
+    print('Duplicate dates check :', bikeDatetime.drop_duplicates().shape == bikeDatetime.shape)
 
     bikeDt['day'] = bikeDatetime.apply(lambda datetime: datetime.day)
     bikeDt['month'] = bikeDatetime.apply(lambda datetime: datetime.month)
@@ -62,6 +63,9 @@ if __name__ == "__main__":
     # Étude du min
     print(bikeDt.loc[(bikeDt['count'] == 1)].to_string())
 
+    # Humidité (une journée fausse données!)
+    print(bikeDt.loc[(bikeDt['humidity'] == 0)].to_string())
+
     # --- PCA ---
     X = bikeDt.loc[:, bikeFeatures].values
     y = bikeDt.loc[:, bikeCounts].values
@@ -77,8 +81,6 @@ if __name__ == "__main__":
     # pca = PCA(0.95)
     bikePCA = pca.fit_transform(X)
     print(pca.explained_variance_ratio_)
-
-    exit()
 
     bikePCA = pd.DataFrame(data=bikePCA, columns=['pc 1', 'pc 2'])
 
