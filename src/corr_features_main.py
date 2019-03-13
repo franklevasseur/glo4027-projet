@@ -14,15 +14,17 @@ if __name__ == "__main__":
     whole_data: List[Data] = data_repository.read_train_data(TRAIN_FILE_PATH)
 
     X = np.array([(d.date.hour,
-                   d.date.month,
-                   d.season,
-                   d.holiday,
-                   d.working_day,
-                   d.weather,
-                   d.temperature,
-                   d.felt_temperature,
-                   d.humidity,
-                   d.wind_speed) for d in whole_data])
+                    d.date.day,
+                    d.date.month,
+                    d.date.year,
+                    d.season,
+                    d.holiday,
+                    d.working_day,
+                    d.weather,
+                    d.temperature,
+                    d.felt_temperature,
+                    d.humidity,
+                    d.wind_speed) for d in whole_data])
 
     casual = np.array([d.casual_cnt for d in whole_data])
     registered = np.array([d.registered_cnt for d in whole_data])
@@ -68,7 +70,9 @@ if __name__ == "__main__":
         intra_features_corr[f2, f1] = corr_coeff  # matrice symétrique
 
     headers = ("hour",
+               "day",
                "month",
+               "year",
                "season",
                 "holiday",
                 "working_day",
