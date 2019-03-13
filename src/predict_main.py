@@ -15,6 +15,7 @@ VISUALIZE = 0
 
 def format_data_for_casual_prediction(d: Data):
     return (d.date.hour,
+            d.date.month,
             d.season,
             d.holiday,
             d.working_day,
@@ -27,6 +28,7 @@ def format_data_for_casual_prediction(d: Data):
 
 def format_data_for_registered_prediction(d: Data):
     return (d.date.hour,
+            d.date.month,
             d.season,
             d.holiday,
             d.working_day,
@@ -103,14 +105,37 @@ if __name__ == "__main__":
         pyplot.show()
 
     # ----------------- validation -----------------
-    model1.fit(Xcasual, Ycasual)  # on a gaspillé le 1/3 du dataset tentot alors ici on le reprend au complet
-    model2.fit(Xregistered, Yregistered)
+    # model1.fit(Xcasual, Ycasual)  # on a gaspillé le 1/3 du dataset tentot alors ici on le reprend au complet
+    # model2.fit(Xregistered, Yregistered)
+
+    X_something = np.array([(d.date.hour,
+            d.season,
+            d.holiday,
+            d.working_day,
+            d.weather,
+            d.temperature,
+            d.felt_temperature,
+            d.humidity,
+            d.wind_speed) for d in train_data])
+    Y_something = np.array([d.total_cnt for d in train_data])
+
+    model = RandomForestRegressor()
+    model.fit(X_something, Y_something)
 
     test_data: List[Data] = data_repository.read_test_data(TEST_FILE_PATH)
-    X1_submission = np.array([format_data_for_casual_prediction(d) for d in test_data])
-    X2_submission = np.array([format_data_for_registered_prediction(d) for d in test_data])
+    # X1_submission = np.array([format_data_for_casual_prediction(d) for d in test_data])
+    # X2_submission = np.array([format_data_for_registered_prediction(d) for d in test_data])
+    X_submission = np.array([(d.date.hour,
+            d.season,
+            d.holiday,
+            d.working_day,
+            d.weather,
+            d.temperature,
+            d.felt_temperature,
+            d.humidity,
+            d.wind_speed) for d in test_data])
 
-    y_submission = model1.predict(X1_submission) + model2.predict(X2_submission)
+    y_submission = model.predict(X_submission)
 
     data_repository.write_submission_data(SUBMISSION_TEMPLATE_FILE_PATH, CURRENT_SUBMISSION, y_submission)
 
