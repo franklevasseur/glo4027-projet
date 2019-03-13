@@ -10,11 +10,14 @@ import data_repository
 from data import Data
 from constants import *
 
-KAGGLE_VALIDATION = 0
+KAGGLE_VALIDATION = 1
+
 
 def format_data_for_casual_prediction(d: Data):
     return (d.date.hour,
-            # d.date.month,
+            # d.date.day,
+            d.date.month,
+            d.date.year,
             d.season,
             d.holiday,
             d.working_day,
@@ -27,7 +30,9 @@ def format_data_for_casual_prediction(d: Data):
 
 def format_data_for_registered_prediction(d: Data):
     return (d.date.hour,
-            # d.date.month,
+            # d.date.day,
+            d.date.month,
+            d.date.year,
             d.season,
             d.holiday,
             d.working_day,
@@ -139,10 +144,11 @@ if __name__ == "__main__":
         kaggle_model_registered.fit(Xregistered, Yregistered)
 
         test_data: List[Data] = data_repository.read_test_data(TEST_FILE_PATH)
-        X1_submission = np.array([format_data_for_casual_prediction(d) for d in test_data])
-        X2_submission = np.array([format_data_for_registered_prediction(d) for d in test_data])
+        Xcasual_submission = np.array([format_data_for_casual_prediction(d) for d in test_data])
+        Xregistered_submission = np.array([format_data_for_registered_prediction(d) for d in test_data])
 
-        y_submission = kaggle_model_casual.predict(X1_submission) + kaggle_model_registered.predict(X2_submission)
+        y_submission = kaggle_model_casual.predict(Xcasual_submission) \
+                       + kaggle_model_registered.predict(Xregistered_submission)
 
         data_repository.write_submission_data(SUBMISSION_TEMPLATE_FILE_PATH, CURRENT_SUBMISSION, y_submission)
 
