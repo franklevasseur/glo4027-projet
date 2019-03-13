@@ -10,7 +10,7 @@ import data_repository
 from data import Data
 from constants import *
 
-KAGGLE_VALIDATION = 1
+KAGGLE_VALIDATION = 0
 
 
 def format_data_for_casual_prediction(d: Data):
@@ -53,17 +53,6 @@ def get_kaggle_score(actual, prediction):
     return score
 
 
-def get_feature_ranking(forest: RandomForestRegressor, X_dataset, dataset_name=""):
-    importances = forest.feature_importances_
-    indices = np.argsort(importances)[::-1]
-
-    # Print the feature ranking
-    print("Feature ranking {}:".format(dataset_name))
-
-    for f in range(X_dataset.shape[1]):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-
-
 def create_model():
     return RandomForestRegressor(bootstrap=False, n_estimators=10, max_depth=10, max_features=0.8)
 
@@ -83,9 +72,6 @@ def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes,
 
     model_registered = create_model()
     model_registered.fit(Xregistered_train, Yregistered_train)
-
-    # get_feature_ranking(model_casual, Xcasual, "causal")
-    # get_feature_ranking(model_registered, Xregistered, "registered")
 
     Y_hat = model_casual.predict(Xcasual_test) + model_registered.predict(Xregistered_test)
 
@@ -107,6 +93,7 @@ if __name__ == "__main__":
 
     # ----------------- Cleaning -----------------
     train_data = np.array([d for d in train_data if d.weather != 4])
+    train_data = np.array([d for d in train_data if d.humidity != 0])
 
     # ----------------- Training and prediction -----------------
     Ycasual = np.array([d.casual_cnt for d in train_data])
