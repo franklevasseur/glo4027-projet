@@ -10,6 +10,7 @@ import data_repository
 from data import Data
 from constants import *
 
+N = 0
 KAGGLE_VALIDATION = 0
 
 
@@ -105,8 +106,7 @@ if __name__ == "__main__":
     train_sample_size = data_size * 2 // 3
 
     mean_kaggle_score, mean_squared_residal_sum = 0, 0
-    n = 10
-    for i in range(n):
+    for i in range(N):
         train_indexes, test_indexes = train_test_split(np.arange(data_size), train_size=train_sample_size)
 
         kaggle_score, squared_deviations_sum = train_and_predict(Xcasual,
@@ -115,11 +115,11 @@ if __name__ == "__main__":
                                                                  Yregistered,
                                                                  train_indexes,
                                                                  test_indexes)
-        mean_kaggle_score += kaggle_score / n
-        mean_squared_residal_sum += squared_deviations_sum / n
+        mean_kaggle_score += kaggle_score / N
+        mean_squared_residal_sum += squared_deviations_sum / N
 
-    print("La somme moyenne des résidus carrés sur {0} essais est : {1:,.2f}".format(n, mean_squared_residal_sum))
-    print("Le score moyen Kaggle sur {0} essais est : {1:.3f}".format(n, mean_kaggle_score))
+    print("La somme moyenne des résidus carrés sur {0} essais est : {1:,.2f}".format(N, mean_squared_residal_sum))
+    print("Le score moyen Kaggle sur {0} essais est : {1:.3f}".format(N, mean_kaggle_score))
 
     if KAGGLE_VALIDATION:
         # ----------------- validation -----------------
