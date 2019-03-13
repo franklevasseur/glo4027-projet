@@ -13,7 +13,9 @@ if __name__ == "__main__":
     # ----------------- read all data -----------------
     whole_data: List[Data] = data_repository.read_train_data(TRAIN_FILE_PATH)
 
-    X = np.array([(d.season,
+    X = np.array([(d.date.hour,
+                   d.date.month,
+                   d.season,
                    d.holiday,
                    d.working_day,
                    d.weather,
@@ -65,7 +67,9 @@ if __name__ == "__main__":
         intra_features_corr[f1, f2] = corr_coeff
         intra_features_corr[f2, f1] = corr_coeff  # matrice symétrique
 
-    headers = ("season",
+    headers = ("hour",
+               "month",
+               "season",
                 "holiday",
                 "working_day",
                 "weather",
