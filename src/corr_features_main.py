@@ -92,20 +92,20 @@ if __name__ == "__main__":
 
     # ----------------- visualize -----------------
     fig, ax1 = pyplot.subplots()
-    pyplot.title("temperature, felt temperature and season vs time")
+    #pyplot.title("temperature, felt temperature and season vs time")
 
     color = 'tab:green'
-    ax1.set_xlabel('date')
-    ax1.set_ylabel('temprature', color=color)
-    pyplot.scatter(dates, felt_temperatures, c='b', s=5, label="felt temperature")
-    pyplot.scatter(dates, temperatures, c='g', s=5, label="actual temperature")
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Température', color=color)
+    pyplot.scatter(dates, felt_temperatures, c='b', s=5, label="Température ressentie")
+    pyplot.scatter(dates, temperatures, c='g', s=5, label="Véritable température")
     ax1.tick_params(axis='y', labelcolor=color)
     pyplot.legend()
 
     ax2 = ax1.twinx()
     color = 'tab:red'
-    ax2.set_ylabel('seasons', color=color)
-    ax2.scatter(dates, seasons, c='r', s=5, label="season")
+    ax2.set_ylabel('Saison', color=color)
+    ax2.scatter(dates, seasons, c='r', s=5, label="saison")
     ax2.tick_params(axis='y', labelcolor=color)
     pyplot.yticks([1, 2, 3, 4])
 

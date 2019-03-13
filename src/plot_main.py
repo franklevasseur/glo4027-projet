@@ -7,12 +7,13 @@ from data import Data
 from constants import *
 
 
-def plot_counts_vs_attribute(attr, title, xtick=None):
+def plot_counts_vs_attribute(attr, title, xtitle, xtick=None):
     pyplot.figure()
-    pyplot.title(title)
+    pyplot.xlabel(xtitle)
+    pyplot.ylabel("Nombre de locations")
 
-    pyplot.scatter(attr, registered_cnts, c='g', s=5, label="registered")
-    pyplot.scatter(attr, casual_cnts, c='r', s=5, label="casual")
+    pyplot.scatter(attr, registered_cnts, c='g', s=5, label="inscrits")
+    pyplot.scatter(attr, casual_cnts, c='r', s=5, label="occasionnels")
 
     if xtick:
         pyplot.xticks(xtick)
@@ -74,20 +75,20 @@ if __name__ == "__main__":
     pyplot.close()
 
     # ----------------- attributes vs counts -----------------
-    plot_counts_vs_attribute(months, "months", range(1, 13))
-    plot_counts_vs_attribute(days, "days", range(0, 7))
-    plot_counts_vs_attribute(hours, "hours", range(0, 24))
-    plot_counts_vs_attribute(seasons, "seasons", range(1, 5))
-    plot_counts_vs_attribute(holidays, "holidays", range(0, 2))
-    plot_counts_vs_attribute(working_days, "working_days", range(0, 2))
-    plot_counts_vs_attribute(weathers, "weathers", range(1, 5))
-    plot_counts_vs_attribute(temperatures, "temperatures")
-    plot_counts_vs_attribute(felt_temps, "felt_temps")
-    plot_counts_vs_attribute(wind_speeds, "wind_speeds")
+    plot_counts_vs_attribute(months, "months", "mois", range(1, 13))
+    plot_counts_vs_attribute(days, "days", "jour", range(0, 7))
+    plot_counts_vs_attribute(hours, "hours", "heure", range(0, 24))
+    plot_counts_vs_attribute(seasons, "seasons", "saison", range(1, 5))
+    plot_counts_vs_attribute(holidays, "holidays", "jour férié", range(0, 2))
+    plot_counts_vs_attribute(working_days, "working_days", "jour ouvrable", range(0, 2))
+    plot_counts_vs_attribute(weathers, "weathers", "météo", range(1, 5))
+    plot_counts_vs_attribute(temperatures, "temperatures", "température")
+    plot_counts_vs_attribute(felt_temps, "felt_temps", "température ressentie")
+    plot_counts_vs_attribute(wind_speeds, "wind_speeds", "vitesse des vents")
 
     # ----------------- distributions -----------------
     plot_distribution(registered_cnts, "registered", "Nombre de locations d'usagers inscrits")
-    plot_distribution(casual_cnts, "registered", "Nombre de locations d'usagers inscrits")
+    plot_distribution(casual_cnts, "casual", "Nombre de locations d'usagers occasionnels")
     plot_distribution(temperatures, "temperatures", "temperatures")
     plot_distribution(felt_temps, "felt_temps", "temperatures ressenties")
     plot_distribution(wind_speeds, "wind_speeds", "vents")
