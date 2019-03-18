@@ -10,8 +10,11 @@ import data_repository
 from data import Data
 from constants import *
 
-N = 0
-KAGGLE_VALIDATION = 0
+N = 10
+KAGGLE_VALIDATION = 1
+
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def format_data_for_casual_prediction(d: Data):
@@ -55,7 +58,7 @@ def get_kaggle_score(actual, prediction):
 
 
 def create_model():
-    return RandomForestRegressor(bootstrap=False, n_estimators=10, max_depth=10, max_features=0.8)
+    return RandomForestRegressor(n_estimators=100, max_depth=10, max_features=None)
 
 
 def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes, test_indexes):

@@ -1,19 +1,18 @@
 import numpy as np
 from typing import List
-from matplotlib import pyplot
 from statistics import stdev
 
 from tabulate import tabulate
 
 from sklearn.model_selection import train_test_split
-from sklearn.svm import LinearSVR
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.linear_model import LinearRegression
 
 import data_repository
 from data import Data
 from constants import *
+
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def format_data_for_casual_prediction(d: Data):
@@ -56,21 +55,6 @@ def get_kaggle_score(actual, prediction):
     return score
 
 
-def get_feature_ranking(forest: RandomForestRegressor, X_dataset, dataset_name=""):
-    importances = forest.feature_importances_
-    indices = np.argsort(importances)[::-1]
-
-    # Print the feature ranking
-    print("Feature ranking {}:".format(dataset_name))
-
-    for f in range(X_dataset.shape[1]):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-
-
-def create_model():
-    return RandomForestRegressor(bootstrap=False, n_estimators=10, max_depth=10, max_features=0.8)
-
-
 def train_and_predict(model_casual, model_registered, Xcasual, Ycasual,
                       Xregistered, Yregistered, train_indexes, test_indexes):
     Xcasual_train = Xcasual[train_indexes]
@@ -84,9 +68,6 @@ def train_and_predict(model_casual, model_registered, Xcasual, Ycasual,
 
     model_casual.fit(Xcasual_train, Ycasual_train)
     model_registered.fit(Xregistered_train, Yregistered_train)
-
-    # get_feature_ranking(model_casual, Xcasual, "causal")
-    # get_feature_ranking(model_registered, Xregistered, "registered")
 
     Y_hat = model_casual.predict(Xcasual_test) + model_registered.predict(Xregistered_test)
     Y_hat[Y_hat < 0] = 0
@@ -121,16 +102,16 @@ if __name__ == "__main__":
     train_sample_size = data_size * 2 // 3
 
     n_estimators = [10, 50, 100]
-    max_features_per_node = [0.2, 0.4, 0.6, 0.8, 1]
+    max_features_per_node = [0.2, 0.4, 0.6, 0.8, None]
     max_depths = [3, 6, 9, 12]
-    clf_results = []
+    clf_results = [["" for i in range(len(max_features_per_node))] for j in range(len(max_depths))]
     n = 10
-    for n_estimator in n_estimators:
-        for max_feat in max_features_per_node:
-            for max_depth in max_depths:
+    for k, n_estimator in enumerate(n_estimators):
+        for j, max_feat in enumerate(max_features_per_node):
+            for i, max_depth in enumerate(max_depths):
 
                 kaggle_scores = []
-                for i in range(n):
+                for test in range(n):
                     train_indexes, test_indexes = train_test_split(np.arange(data_size), train_size=train_sample_size)
 
                     kaggle_score, _ = train_and_predict(build_forest(n_estimator, max_depth, max_feat),
@@ -148,10 +129,15 @@ if __name__ == "__main__":
                 mean_kaggle_score = round(mean_kaggle_score, 3)
                 std_kaggle_score = round(std_kaggle_score, 3)
 
-                clf_results.append([n_estimator, max_feat, max_depth, mean_kaggle_score, std_kaggle_score])
+                formated_score = "{:.3f} , {:.3f}".format(mean_kaggle_score, std_kaggle_score)
 
-    print(tabulate(clf_results, ("nombre d'arbre",
-                                 "proportion des champs par noeud",
-                                 "profondeur max",
-                                 "moyenne sur {} essais".format(n),
-                                 "écart-type sur {} essais".format(n)), tablefmt='latex'))
+                clf_results[i][j] = formated_score
+
+        for (r, row), mx in zip(enumerate(clf_results), max_depths):
+            formated_row = [str(mx)]
+            formated_row.extend(row)
+            clf_results[r] = formated_row
+
+        print("nombre d'arbres = {}".format(n_estimator))
+        print(tabulate(clf_results, max_features_per_node, tablefmt='latex'))
+        clf_results = [["" for i in range(len(max_features_per_node))] for j in range(len(max_depths))]
