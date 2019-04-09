@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 from matplotlib import pyplot
+from statistics import stdev
 
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVR
@@ -11,7 +12,7 @@ from data import Data
 from constants import *
 
 N = 10
-KAGGLE_VALIDATION = 1
+KAGGLE_VALIDATION = 0
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -19,7 +20,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 def format_data_for_casual_prediction(d: Data):
     return (d.date.hour,
-            # d.date.day,
+            d.date.day,
             d.date.month,
             d.date.year,
             d.season,
@@ -27,14 +28,14 @@ def format_data_for_casual_prediction(d: Data):
             d.working_day,
             d.weather,
             d.temperature,
-            # d.felt_temperature,
+            d.felt_temperature,
             d.humidity,
             d.wind_speed)
 
 
 def format_data_for_registered_prediction(d: Data):
     return (d.date.hour,
-            # d.date.day,
+            d.date.day,
             d.date.month,
             d.date.year,
             d.season,
@@ -42,7 +43,7 @@ def format_data_for_registered_prediction(d: Data):
             d.working_day,
             d.weather,
             d.temperature,
-            # d.felt_temperature,
+            d.felt_temperature,
             d.humidity,
             d.wind_speed)
 
@@ -58,7 +59,7 @@ def get_kaggle_score(actual, prediction):
 
 
 def create_model():
-    return RandomForestRegressor(n_estimators=100, max_depth=10, max_features=None)
+    return RandomForestRegressor(n_estimators=100, max_depth=12, max_features=None)
 
 
 def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes, test_indexes):
@@ -96,8 +97,8 @@ if __name__ == "__main__":
     registered_cnts = np.array([d.registered_cnt for d in train_data])
 
     # ----------------- Cleaning -----------------
-    train_data = np.array([d for d in train_data if d.weather != 4])
-    train_data = np.array([d for d in train_data if d.humidity != 0])
+    # train_data = np.array([d for d in train_data if d.weather != 4])
+    # train_data = np.array([d for d in train_data if d.humidity != 0])
 
     # ----------------- Training and prediction -----------------
     Ycasual = np.array([d.casual_cnt for d in train_data])
@@ -109,6 +110,7 @@ if __name__ == "__main__":
     train_sample_size = data_size * 2 // 3
 
     mean_kaggle_score, mean_squared_residal_sum = 0, 0
+    scores = []
     for i in range(N):
         train_indexes, test_indexes = train_test_split(np.arange(data_size), train_size=train_sample_size)
 
@@ -118,11 +120,14 @@ if __name__ == "__main__":
                                                                  Yregistered,
                                                                  train_indexes,
                                                                  test_indexes)
-        mean_kaggle_score += kaggle_score / N
+        scores.append(kaggle_score)
         mean_squared_residal_sum += squared_deviations_sum / N
 
+    mean_kaggle_score = sum(scores) / N
+    stdev_kaggle_score = stdev(scores)
+
     print("La somme moyenne des résidus carrés sur {0} essais est : {1:,.2f}".format(N, mean_squared_residal_sum))
-    print("Le score moyen Kaggle sur {0} essais est : {1:.3f}".format(N, mean_kaggle_score))
+    print("Le score moyen Kaggle sur {0} essais est : {1:.3f} ± {2}".format(N, mean_kaggle_score, stdev_kaggle_score))
 
     if KAGGLE_VALIDATION:
         # ----------------- validation -----------------
