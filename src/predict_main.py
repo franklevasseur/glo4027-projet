@@ -1,18 +1,18 @@
 import numpy as np
 from typing import List
-from matplotlib import pyplot
 from statistics import stdev
+from matplotlib import pyplot
 
-from sklearn.model_selection import train_test_split
-from sklearn.svm import LinearSVR
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn import preprocessing
 
 import data_repository
 from data import Data
 from constants import *
 
-N = 10
+N = 1
 KAGGLE_VALIDATION = 0
+PLOT = 1
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -28,7 +28,7 @@ def format_data_for_casual_prediction(d: Data):
             d.working_day,
             d.weather,
             d.temperature,
-            d.felt_temperature,
+            # d.felt_temperature,
             d.humidity,
             d.wind_speed)
 
@@ -43,7 +43,7 @@ def format_data_for_registered_prediction(d: Data):
             d.working_day,
             d.weather,
             d.temperature,
-            d.felt_temperature,
+            # d.felt_temperature,
             d.humidity,
             d.wind_speed)
 
@@ -59,7 +59,7 @@ def get_kaggle_score(actual, prediction):
 
 
 def create_model():
-    return RandomForestRegressor(n_estimators=100, max_depth=12, max_features=None)
+    return KNeighborsRegressor(n_neighbors=2)
 
 
 def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes, test_indexes):
@@ -83,13 +83,14 @@ def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes,
     squared_deviations_sum = (np.square(Y_hat - Y_test)).sum()
     kaggle_score = get_kaggle_score(Y_test, Y_hat)
 
-    return kaggle_score, squared_deviations_sum
+    return kaggle_score, squared_deviations_sum, Y_hat
 
 
 if __name__ == "__main__":
 
     # ----------------- read all data -----------------
     train_data: List[Data] = data_repository.read_train_data(TRAIN_FILE_PATH)
+    train_data.sort(key=lambda data: data.date)
 
     dates = np.array([d.date for d in train_data])
 
@@ -97,8 +98,8 @@ if __name__ == "__main__":
     registered_cnts = np.array([d.registered_cnt for d in train_data])
 
     # ----------------- Cleaning -----------------
-    # train_data = np.array([d for d in train_data if d.weather != 4])
-    # train_data = np.array([d for d in train_data if d.humidity != 0])
+    # train_data = [d for d in train_data if d.weather != 4]
+    # train_data = [d for d in train_data if d.humidity != 0]
 
     # ----------------- Training and prediction -----------------
     Ycasual = np.array([d.casual_cnt for d in train_data])
@@ -106,15 +107,18 @@ if __name__ == "__main__":
     Xcasual = np.array([format_data_for_casual_prediction(d) for d in train_data])
     Xregistered = np.array([format_data_for_registered_prediction(d) for d in train_data])
 
-    data_size = len(train_data)
-    train_sample_size = data_size * 2 // 3
+    Xcasual = preprocessing.scale(Xcasual)
+    Xregistered = preprocessing.scale(Xregistered)
 
     mean_kaggle_score, mean_squared_residal_sum = 0, 0
     scores = []
-    for i in range(N):
-        train_indexes, test_indexes = train_test_split(np.arange(data_size), train_size=train_sample_size)
+    predictions: np.ndarray
 
-        kaggle_score, squared_deviations_sum = train_and_predict(Xcasual,
+    train_indexes = [i for i, d in enumerate(train_data) if d.date.day < 15]
+    test_indexes = [i for i, d in enumerate(train_data) if d.date.day >= 15]
+
+    for i in range(N):
+        kaggle_score, squared_deviations_sum, y_hat = train_and_predict(Xcasual,
                                                                  Ycasual,
                                                                  Xregistered,
                                                                  Yregistered,
@@ -122,12 +126,25 @@ if __name__ == "__main__":
                                                                  test_indexes)
         scores.append(kaggle_score)
         mean_squared_residal_sum += squared_deviations_sum / N
+        predictions = y_hat
 
     mean_kaggle_score = sum(scores) / N
-    stdev_kaggle_score = stdev(scores)
+    stdev_kaggle_score = 0 if N < 2 else stdev(scores)
 
     print("La somme moyenne des résidus carrés sur {0} essais est : {1:,.2f}".format(N, mean_squared_residal_sum))
     print("Le score moyen Kaggle sur {0} essais est : {1:.3f} ± {2}".format(N, mean_kaggle_score, stdev_kaggle_score))
+
+    if PLOT:
+        pyplot.figure()
+        pyplot.xlabel("Date")
+        pyplot.ylabel("Nombre de locations")
+
+        pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
+                       Ycasual[test_indexes] + Yregistered[test_indexes], c='g', s=5, label="vrai compte")
+        pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
+                       predictions, c='r', s=10, label="compte prédit")
+        pyplot.legend()
+        pyplot.show()
 
     if KAGGLE_VALIDATION:
         # ----------------- validation -----------------
