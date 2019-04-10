@@ -5,14 +5,15 @@ from matplotlib import pyplot
 
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn import preprocessing
+from random import randint
 
 import data_repository
 from data import Data
 from constants import *
 
-N = 1
-KAGGLE_VALIDATION = 0
-PLOT = 1
+N = 10
+KAGGLE_VALIDATION = 1
+PLOT = 0
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -59,7 +60,7 @@ def get_kaggle_score(actual, prediction):
 
 
 def create_model():
-    return KNeighborsRegressor(n_neighbors=2)
+    return KNeighborsRegressor(n_neighbors=2, metric='euclidean')
 
 
 def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes, test_indexes):
@@ -78,7 +79,7 @@ def train_and_predict(Xcasual, Ycasual, Xregistered, Yregistered, train_indexes,
     model_registered = create_model()
     model_registered.fit(Xregistered_train, Yregistered_train)
 
-    Y_hat = model_casual.predict(Xcasual_test) + model_registered.predict(Xregistered_test)
+    Y_hat = (model_casual.predict(Xcasual_test) + model_registered.predict(Xregistered_test)).astype(int)
 
     squared_deviations_sum = (np.square(Y_hat - Y_test)).sum()
     kaggle_score = get_kaggle_score(Y_test, Y_hat)
@@ -114,10 +115,12 @@ if __name__ == "__main__":
     scores = []
     predictions: np.ndarray
 
-    train_indexes = [i for i, d in enumerate(train_data) if d.date.day < 15]
-    test_indexes = [i for i, d in enumerate(train_data) if d.date.day >= 15]
-
     for i in range(N):
+        test_days_begin = randint(0, 15)
+        test_days = range(test_days_begin, test_days_begin + 5)  # on veut prédire 5 jours consécutifs
+        train_indexes = [i for i, d in enumerate(train_data) if d.date.day not in test_days]
+        test_indexes = [i for i, d in enumerate(train_data) if d.date.day in test_days]
+
         kaggle_score, squared_deviations_sum, y_hat = train_and_predict(Xcasual,
                                                                  Ycasual,
                                                                  Xregistered,
@@ -128,23 +131,23 @@ if __name__ == "__main__":
         mean_squared_residal_sum += squared_deviations_sum / N
         predictions = y_hat
 
+        if PLOT:
+            pyplot.figure()
+            pyplot.xlabel("Date")
+            pyplot.ylabel("Nombre de locations")
+
+            pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
+                           Ycasual[test_indexes] + Yregistered[test_indexes], c='g', s=5, label="vrai compte")
+            pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
+                           predictions, c='r', s=10, label="compte prédit")
+            pyplot.legend()
+            pyplot.show()
+
     mean_kaggle_score = sum(scores) / N
     stdev_kaggle_score = 0 if N < 2 else stdev(scores)
 
     print("La somme moyenne des résidus carrés sur {0} essais est : {1:,.2f}".format(N, mean_squared_residal_sum))
     print("Le score moyen Kaggle sur {0} essais est : {1:.3f} ± {2}".format(N, mean_kaggle_score, stdev_kaggle_score))
-
-    if PLOT:
-        pyplot.figure()
-        pyplot.xlabel("Date")
-        pyplot.ylabel("Nombre de locations")
-
-        pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
-                       Ycasual[test_indexes] + Yregistered[test_indexes], c='g', s=5, label="vrai compte")
-        pyplot.scatter([d.date for i, d in enumerate(train_data) if i in test_indexes],
-                       predictions, c='r', s=10, label="compte prédit")
-        pyplot.legend()
-        pyplot.show()
 
     if KAGGLE_VALIDATION:
         # ----------------- validation -----------------
@@ -159,8 +162,8 @@ if __name__ == "__main__":
         Xcasual_submission = np.array([format_data_for_casual_prediction(d) for d in test_data])
         Xregistered_submission = np.array([format_data_for_registered_prediction(d) for d in test_data])
 
-        y_submission = kaggle_model_casual.predict(Xcasual_submission) \
-                       + kaggle_model_registered.predict(Xregistered_submission)
+        y_submission = (kaggle_model_casual.predict(Xcasual_submission)
+                        + kaggle_model_registered.predict(Xregistered_submission)).astype(int)
 
         data_repository.write_submission_data(SUBMISSION_TEMPLATE_FILE_PATH, CURRENT_SUBMISSION, y_submission)
 

@@ -1,11 +1,13 @@
 import numpy as np
 from typing import List
 from statistics import stdev
+from matplotlib import pyplot
 
 from tabulate import tabulate
 
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn import preprocessing
+from random import randint
 
 import data_repository
 from data import Data
@@ -78,8 +80,12 @@ def train_and_predict(model_casual, model_registered, Xcasual, Ycasual,
     return kaggle_score, squared_deviations_sum
 
 
-def build_forest(n_estimators, max_depth, max_features):
-    return RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth, max_features=max_features)
+def build_knn(n_neighbors, distance_power):
+    return KNeighborsRegressor(n_neighbors=n_neighbors, metric=distance_power)
+
+
+def get_column(two_dim_list, column, lenght):
+    return [two_dim_list[i][column] for i in range(lenght)]
 
 
 if __name__ == "__main__":
@@ -98,46 +104,60 @@ if __name__ == "__main__":
     Xcasual = np.array([format_data_for_casual_prediction(d) for d in train_data])
     Xregistered = np.array([format_data_for_registered_prediction(d) for d in train_data])
 
-    data_size = len(train_data)
-    train_sample_size = data_size * 2 // 3
+    Xcasual = preprocessing.scale(Xcasual)
+    Xregistered = preprocessing.scale(Xregistered)
 
-    n_estimators = [10, 50, 100]
-    max_features_per_node = [0.2, 0.4, 0.6, 0.8, None]
-    max_depths = [3, 6, 9, 12]
-    clf_results = [["" for i in range(len(max_features_per_node))] for j in range(len(max_depths))]
+    n_neighbors_counts = [1, 2, 3, 4]
+    n_neighbors_counts.extend([n for n in range(5, 105, 5)])
+    distances = ["euclidean", "manhattan", "chebyshev"]
+    clf_results = [[None for i in range(len(distances))] for j in range(len(n_neighbors_counts))]
+    clf_results_formatted = [["" for i in range(len(distances))] for j in range(len(n_neighbors_counts))]
     n = 10
-    for k, n_estimator in enumerate(n_estimators):
-        for j, max_feat in enumerate(max_features_per_node):
-            for i, max_depth in enumerate(max_depths):
+    for i, n_neighbors in enumerate(n_neighbors_counts):
+        for j, distance_metric in enumerate(distances):
+            print("n = {}, p = {}".format(n_neighbors, distance_metric))
 
-                kaggle_scores = []
-                for test in range(n):
-                    train_indexes, test_indexes = train_test_split(np.arange(data_size), train_size=train_sample_size)
+            kaggle_scores = []
 
-                    kaggle_score, _ = train_and_predict(build_forest(n_estimator, max_depth, max_feat),
-                                                        build_forest(n_estimator, max_depth, max_feat),
-                                                             Xcasual,
-                                                             Ycasual,
-                                                             Xregistered,
-                                                             Yregistered,
-                                                             train_indexes,
-                                                             test_indexes)
-                    kaggle_scores.append(kaggle_score)
+            for test in range(n):
 
-                mean_kaggle_score = sum(kaggle_scores) / n
-                std_kaggle_score = stdev(kaggle_scores)
-                mean_kaggle_score = round(mean_kaggle_score, 3)
-                std_kaggle_score = round(std_kaggle_score, 3)
+                test_days_begin = randint(0, 15)
+                test_days = range(test_days_begin, test_days_begin + 5)  # on veut prédire 5 jours consécutifs
+                train_indexes = [i for i, d in enumerate(train_data) if d.date.day not in test_days]
+                test_indexes = [i for i, d in enumerate(train_data) if d.date.day in test_days]
 
-                formated_score = "{:.3f} , {:.3f}".format(mean_kaggle_score, std_kaggle_score)
+                kaggle_score, _ = train_and_predict(build_knn(n_neighbors, distance_metric),
+                                                    build_knn(n_neighbors, distance_metric),
+                                                    Xcasual,
+                                                    Ycasual,
+                                                    Xregistered,
+                                                    Yregistered,
+                                                    train_indexes,
+                                                    test_indexes)
+                kaggle_scores.append(kaggle_score)
 
-                clf_results[i][j] = formated_score
+            mean_kaggle_score = sum(kaggle_scores) / n
+            std_kaggle_score = stdev(kaggle_scores)
+            mean_kaggle_score = round(mean_kaggle_score, 3)
+            std_kaggle_score = round(std_kaggle_score, 3)
 
-        for (r, row), mx in zip(enumerate(clf_results), max_depths):
-            formated_row = [str(mx)]
-            formated_row.extend(row)
-            clf_results[r] = formated_row
+            formated_score = "{:.3f} , {:.3f}".format(mean_kaggle_score, std_kaggle_score)
 
-        print("nombre d'arbres = {}".format(n_estimator))
-        print(tabulate(clf_results, max_features_per_node, tablefmt='latex'))
-        clf_results = [["" for i in range(len(max_features_per_node))] for j in range(len(max_depths))]
+            clf_results[i][j] = mean_kaggle_score
+            clf_results_formatted[i][j] = formated_score
+
+    pyplot.figure()
+    pyplot.ylabel("Score Kaggle moyen sur {} essais".format(n))
+    pyplot.xlabel("Nombre de voisins")
+    for i, p in enumerate(distances):
+        pyplot.plot(n_neighbors_counts, get_column(clf_results, i, len(n_neighbors_counts)), label="p = {}".format(p))
+
+    pyplot.legend()
+    pyplot.show()
+
+    for (r, row), n in zip(enumerate(clf_results_formatted), n_neighbors_counts):
+        formatted_row = ["n = {}".format(n)]
+        formatted_row.extend(row)
+        clf_results_formatted[r] = formatted_row
+
+    print(tabulate(clf_results_formatted, distances, tablefmt='latex'))
